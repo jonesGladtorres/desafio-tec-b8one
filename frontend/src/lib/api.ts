@@ -6,10 +6,11 @@ import type {
   ExamSummary,
   LoginResponse,
   PaginatedResponse,
+  UpdateProfileResponse,
   UserProfile,
 } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 const API_VERSION_HEADER = 'X-API-Version';
 
 type RequestOptions = {
@@ -79,6 +80,13 @@ function readErrorMessage(payload: unknown): string {
 }
 
 export const api = {
+  register(data: { name: string; email: string; password: string }): Promise<LoginResponse> {
+    return request<LoginResponse>('/auth/register', {
+      method: 'POST',
+      body: data,
+    });
+  },
+
   login(email: string, password: string): Promise<LoginResponse> {
     return request<LoginResponse>('/auth/login', {
       method: 'POST',
@@ -113,6 +121,19 @@ export const api = {
 
   getProfile(): Promise<UserProfile> {
     return request<UserProfile>('/users/me', { authenticated: true });
+  },
+
+  updateProfile(data: {
+    name?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<UpdateProfileResponse> {
+    return request<UpdateProfileResponse>('/users/me', {
+      method: 'PATCH',
+      authenticated: true,
+      body: data,
+    });
   },
 
   listAppointments(params: {

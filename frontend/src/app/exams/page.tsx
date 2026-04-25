@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Clock3, Filter, Search, ShieldCheck, Sparkles } from 'lucide-react';
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -15,12 +14,6 @@ import {
 import { useDebounce } from '@/hooks/use-debounce';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/formatters';
-
-export const metadata: Metadata = {
-  title: 'Catálogo de Exames',
-  description:
-    'Consulte os exames disponíveis na rede A&Eight Labs, veja preparo, duração estimada e agende online.',
-};
 
 const PAGE_SIZE = 9;
 

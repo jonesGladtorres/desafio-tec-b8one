@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, HeartPulse, Mail } from 'lucide-react';
+import { ArrowRight, HeartPulse, Mail, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
@@ -10,14 +10,24 @@ import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui
 import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
-import { loginSchema } from '@/lib/schemas';
+import { registerSchema } from '@/lib/schemas';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const form = useZodForm(loginSchema, { email: '', password: '' });
+  const form = useZodForm(registerSchema, {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const loginMutation = useMutation({
-    mutationFn: () => api.login(form.values.email, form.values.password),
+  const registerMutation = useMutation({
+    mutationFn: () =>
+      api.register({
+        name: form.values.name,
+        email: form.values.email,
+        password: form.values.password,
+      }),
     onSuccess: (session) => {
       persistSession(session);
       router.replace('/exams');
@@ -28,14 +38,14 @@ export default function LoginPage() {
     event.preventDefault();
     const data = form.validate();
     if (!data) return;
-    loginMutation.mutate();
+    registerMutation.mutate();
   }
 
   const errorMessage =
-    loginMutation.error instanceof ApiError
-      ? loginMutation.error.message
-      : loginMutation.error
-        ? 'Não foi possível entrar agora. Tente novamente.'
+    registerMutation.error instanceof ApiError
+      ? registerMutation.error.message
+      : registerMutation.error
+        ? 'Não foi possível criar a conta. Tente novamente.'
         : null;
 
   return (
@@ -56,22 +66,22 @@ export default function LoginPage() {
 
             <div>
               <p className="mb-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-[#d7efe6]">
-                Rede integrada de laboratórios
+                Cadastro gratuito
               </p>
               <h1 className="max-w-xl text-5xl font-black leading-[1.02] tracking-tight">
-                Um jeito mais calmo de cuidar da sua rotina de exames.
+                Comece a cuidar da sua saúde com mais organização.
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-8 text-white/72">
-                Busque exames, acompanhe sua agenda e mantenha suas próximas coletas
-                organizadas em um só lugar.
+                Crie sua conta, agende exames e acompanhe sua agenda de laboratório em um
+                só lugar.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               {[
                 ['10+', 'exames disponíveis'],
-                ['5 min', 'cache Redis'],
                 ['JWT', 'acesso seguro'],
+                ['Redis', 'cache rápido'],
               ].map(([value, label]) => (
                 <div
                   key={label}
@@ -100,17 +110,29 @@ export default function LoginPage() {
 
           <div className="max-w-md">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#7a8983]">
-              Acesso seguro
+              Novo cadastro
             </p>
             <h2 className="mt-3 text-4xl font-black tracking-tight text-[#173a31]">
-              Bem-vindo de volta
+              Criar conta
             </h2>
             <p className="mt-4 text-base leading-7 text-[#66756f]">
-              Entre para continuar seus agendamentos e consultar exames disponíveis na rede.
+              Preencha os dados abaixo para acessar o portal e agendar exames.
             </p>
           </div>
 
           <form onSubmit={submit} className="mt-10 space-y-5">
+            <FormField label="Nome completo" error={form.errors.name}>
+              <FormInput
+                icon={<UserRound size={18} />}
+                type="text"
+                autoComplete="name"
+                placeholder="Seu nome completo"
+                value={form.values.name}
+                onChange={(e) => form.setValue('name', e.target.value)}
+                error={!!form.errors.name}
+              />
+            </FormField>
+
             <FormField label="E-mail" error={form.errors.email}>
               <FormInput
                 icon={<Mail size={18} />}
@@ -125,11 +147,21 @@ export default function LoginPage() {
 
             <FormField label="Senha" error={form.errors.password}>
               <PasswordInput
-                autoComplete="current-password"
-                placeholder="Sua senha"
+                autoComplete="new-password"
+                placeholder="Mínimo 8 caracteres"
                 value={form.values.password}
                 onChange={(e) => form.setValue('password', e.target.value)}
                 error={!!form.errors.password}
+              />
+            </FormField>
+
+            <FormField label="Confirmar senha" error={form.errors.confirmPassword}>
+              <PasswordInput
+                autoComplete="new-password"
+                placeholder="Repita sua senha"
+                value={form.values.confirmPassword}
+                onChange={(e) => form.setValue('confirmPassword', e.target.value)}
+                error={!!form.errors.confirmPassword}
               />
             </FormField>
 
@@ -137,17 +169,17 @@ export default function LoginPage() {
 
             <SoftButton
               type="submit"
-              disabled={loginMutation.isPending}
+              disabled={registerMutation.isPending}
               className="h-14 w-full rounded-[20px]"
             >
-              {loginMutation.isPending ? 'Entrando...' : 'Entrar no portal'}
+              {registerMutation.isPending ? 'Criando conta...' : 'Criar minha conta'}
               <ArrowRight size={18} />
             </SoftButton>
 
             <p className="text-center text-sm text-[#66756f]">
-              Não tem conta?{' '}
-              <Link href="/register" className="font-bold text-[#2f7d67] hover:underline">
-                Criar conta
+              Já tem conta?{' '}
+              <Link href="/login" className="font-bold text-[#2f7d67] hover:underline">
+                Entrar
               </Link>
             </p>
           </form>
