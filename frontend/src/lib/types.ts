@@ -55,12 +55,6 @@ export type Appointment = {
   exam: ExamSummary;
 };
 
-export type UpdateProfileResponse = {
-  id: string;
-  name: string;
-  email: string;
-};
-
 export type UserProfile = User & {
   memberSince: string;
   stats: {

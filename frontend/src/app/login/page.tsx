@@ -1,23 +1,20 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, HeartPulse, Mail } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, HeartPulse, LockKeyhole, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 import { SoftButton } from '@/components/app-shell';
-import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
-import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
-import { loginSchema } from '@/lib/schemas';
 
 export default function LoginPage() {
   const router = useRouter();
-  const form = useZodForm(loginSchema, { email: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const loginMutation = useMutation({
-    mutationFn: () => api.login(form.values.email, form.values.password),
+    mutationFn: () => api.login(email, password),
     onSuccess: (session) => {
       persistSession(session);
       router.replace('/exams');
@@ -26,8 +23,6 @@ export default function LoginPage() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = form.validate();
-    if (!data) return;
     loginMutation.mutate();
   }
 
@@ -111,29 +106,44 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={submit} className="mt-10 space-y-5">
-            <FormField label="E-mail" error={form.errors.email}>
-              <FormInput
-                icon={<Mail size={18} />}
-                type="email"
-                autoComplete="email"
-                placeholder="seu@email.com"
-                value={form.values.email}
-                onChange={(e) => form.setValue('email', e.target.value)}
-                error={!!form.errors.email}
-              />
-            </FormField>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">E-mail</span>
+              <span className="flex h-14 items-center gap-3 rounded-2xl border border-[#dbe6e0] bg-[#f9fbfa] px-4 transition focus-within:border-[#2f7d67]">
+                <Mail size={18} className="text-[#7a8983]" />
+                <input
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  type="email"
+                  autoComplete="email"
+                  className="h-full min-w-0 flex-1 bg-transparent text-[#18352d] placeholder:text-[#9aa8a2]"
+                  placeholder="seu@email.com"
+                  required
+                />
+              </span>
+            </label>
 
-            <FormField label="Senha" error={form.errors.password}>
-              <PasswordInput
-                autoComplete="current-password"
-                placeholder="Sua senha"
-                value={form.values.password}
-                onChange={(e) => form.setValue('password', e.target.value)}
-                error={!!form.errors.password}
-              />
-            </FormField>
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">Senha</span>
+              <span className="flex h-14 items-center gap-3 rounded-2xl border border-[#dbe6e0] bg-[#f9fbfa] px-4 transition focus-within:border-[#2f7d67]">
+                <LockKeyhole size={18} className="text-[#7a8983]" />
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  autoComplete="current-password"
+                  className="h-full min-w-0 flex-1 bg-transparent text-[#18352d] placeholder:text-[#9aa8a2]"
+                  placeholder="Sua senha"
+                  required
+                  minLength={8}
+                />
+              </span>
+            </label>
 
-            {errorMessage ? <ErrorAlert message={errorMessage} /> : null}
+            {errorMessage ? (
+              <p role="alert" className="rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
+                {errorMessage}
+              </p>
+            ) : null}
 
             <SoftButton
               type="submit"
@@ -143,13 +153,6 @@ export default function LoginPage() {
               {loginMutation.isPending ? 'Entrando...' : 'Entrar no portal'}
               <ArrowRight size={18} />
             </SoftButton>
-
-            <p className="text-center text-sm text-[#66756f]">
-              Não tem conta?{' '}
-              <Link href="/register" className="font-bold text-[#2f7d67] hover:underline">
-                Criar conta
-              </Link>
-            </p>
           </form>
         </section>
       </div>
