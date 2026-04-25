@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const PROTECTED = ['/appointments', '/profile', '/exams'];
-const AUTH_ONLY = ['/login'];
+const AUTH_ONLY = ['/login', '/register'];
 const TOKEN_COOKIE = 'exams_portal_token';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
   const { pathname } = request.nextUrl;
 
