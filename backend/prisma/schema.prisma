@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELED
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  appointments Appointment[]
+
+  @@map("users")
+}
+
+model Exam {
+  id                      String        @id @default(uuid()) @db.Uuid
+  name                    String        @unique
+  description             String
+  preparationInstructions String?       @map("preparation_instructions")
+  durationInMinutes       Int           @map("duration_in_minutes")
+  priceCents              Int           @map("price_cents")
+  isActive                Boolean       @default(true) @map("is_active")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+  appointments            Appointment[]
+
+  @@map("exams")
+}
+
+model Appointment {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  examId      String            @map("exam_id") @db.Uuid
+  scheduledAt DateTime          @map("scheduled_at")
+  notes       String?
+  status      AppointmentStatus @default(SCHEDULED)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam        Exam              @relation(fields: [examId], references: [id], onDelete: Restrict)
+
+  @@unique([examId, scheduledAt], map: "appointments_exam_schedule_unique")
+  @@unique([userId, scheduledAt], map: "appointments_user_schedule_unique")
+  @@index([userId, scheduledAt])
+  @@index([examId, scheduledAt])
+  @@map("appointments")
+}
