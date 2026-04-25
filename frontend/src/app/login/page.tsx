@@ -2,17 +2,11 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, HeartPulse, LockKeyhole, Mail } from 'lucide-react';
-import type { Metadata } from 'next';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { SoftButton } from '@/components/app-shell';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
-
-export const metadata: Metadata = {
-  title: 'Entrar',
-  description: 'Acesse o Portal do Paciente da rede A&Eight Labs para agendar exames e acompanhar sua agenda.',
-};
 
 export default function LoginPage() {
   const router = useRouter();

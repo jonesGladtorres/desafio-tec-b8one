@@ -10,7 +10,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import {
   AppShell,
   PortalHeader,
@@ -19,11 +18,6 @@ import {
 } from '@/components/app-shell';
 import { api } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/formatters';
-
-export const metadata: Metadata = {
-  title: 'Meu Perfil',
-  description: 'Visualize os dados da sua conta, histórico de exames e próximos compromissos na rede A&Eight Labs.',
-};
 
 export default function ProfilePage() {
   return (

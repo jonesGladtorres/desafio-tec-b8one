@@ -8,7 +8,6 @@ import {
   Clock3,
   ClipboardList,
 } from 'lucide-react';
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -20,11 +19,6 @@ import {
 } from '@/components/app-shell';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
-
-export const metadata: Metadata = {
-  title: 'Minha Agenda',
-  description: 'Acompanhe seus agendamentos de exames, horários confirmados e histórico na rede A&Eight Labs.',
-};
 
 const PAGE_SIZE = 6;
 
