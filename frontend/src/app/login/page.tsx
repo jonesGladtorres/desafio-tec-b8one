@@ -2,16 +2,22 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, HeartPulse, LockKeyhole, Mail } from 'lucide-react';
+import type { Metadata } from 'next';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { SoftButton } from '@/components/app-shell';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
 
+export const metadata: Metadata = {
+  title: 'Entrar',
+  description: 'Acesse o Portal do Paciente da rede A&Eight Labs para agendar exames e acompanhar sua agenda.',
+};
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('patient@example.com');
-  const [password, setPassword] = useState('Password123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const loginMutation = useMutation({
     mutationFn: () => api.login(email, password),
@@ -30,7 +36,7 @@ export default function LoginPage() {
     loginMutation.error instanceof ApiError
       ? loginMutation.error.message
       : loginMutation.error
-        ? 'Nao foi possivel entrar agora.'
+        ? 'Não foi possível entrar agora. Tente novamente.'
         : null;
 
   return (
@@ -44,29 +50,27 @@ export default function LoginPage() {
                 <HeartPulse size={24} />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white/60">
-                  A&Eight Labs
-                </p>
+                <p className="text-sm font-semibold text-white/60">A&Eight Labs</p>
                 <p className="text-xl font-black">Portal do Paciente</p>
               </div>
             </div>
 
             <div>
               <p className="mb-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-[#d7efe6]">
-                Rede integrada de laboratorios
+                Rede integrada de laboratórios
               </p>
               <h1 className="max-w-xl text-5xl font-black leading-[1.02] tracking-tight">
                 Um jeito mais calmo de cuidar da sua rotina de exames.
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-8 text-white/72">
-                Busque exames, acompanhe sua agenda e mantenha suas proximas
-                coletas organizadas em um so lugar.
+                Busque exames, acompanhe sua agenda e mantenha suas próximas coletas
+                organizadas em um só lugar.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               {[
-                ['10+', 'exames seed'],
+                ['10+', 'exames disponíveis'],
                 ['5 min', 'cache Redis'],
                 ['JWT', 'acesso seguro'],
               ].map(([value, label]) => (
@@ -90,12 +94,8 @@ export default function LoginPage() {
               <HeartPulse size={24} />
             </span>
             <div>
-              <p className="text-sm font-semibold text-[#7a8983]">
-                A&Eight Labs
-              </p>
-              <p className="text-xl font-black text-[#18352d]">
-                Portal do Paciente
-              </p>
+              <p className="text-sm font-semibold text-[#7a8983]">A&Eight Labs</p>
+              <p className="text-xl font-black text-[#18352d]">Portal do Paciente</p>
             </div>
           </div>
 
@@ -107,16 +107,13 @@ export default function LoginPage() {
               Bem-vindo de volta
             </h2>
             <p className="mt-4 text-base leading-7 text-[#66756f]">
-              Entre para continuar seus agendamentos e consultar exames
-              disponiveis na rede.
+              Entre para continuar seus agendamentos e consultar exames disponíveis na rede.
             </p>
           </div>
 
           <form onSubmit={submit} className="mt-10 space-y-5">
             <label className="block">
-              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">
-                E-mail
-              </span>
+              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">E-mail</span>
               <span className="flex h-14 items-center gap-3 rounded-2xl border border-[#dbe6e0] bg-[#f9fbfa] px-4 transition focus-within:border-[#2f7d67]">
                 <Mail size={18} className="text-[#7a8983]" />
                 <input
@@ -132,9 +129,7 @@ export default function LoginPage() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">
-                Senha
-              </span>
+              <span className="mb-2 block text-sm font-bold text-[#2d4a41]">Senha</span>
               <span className="flex h-14 items-center gap-3 rounded-2xl border border-[#dbe6e0] bg-[#f9fbfa] px-4 transition focus-within:border-[#2f7d67]">
                 <LockKeyhole size={18} className="text-[#7a8983]" />
                 <input
@@ -151,7 +146,7 @@ export default function LoginPage() {
             </label>
 
             {errorMessage ? (
-              <p className="rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
+              <p role="alert" className="rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
                 {errorMessage}
               </p>
             ) : null}

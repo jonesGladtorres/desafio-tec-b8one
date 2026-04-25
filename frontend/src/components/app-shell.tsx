@@ -1,19 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  CalendarDays,
-  ClipboardList,
-  HeartPulse,
-  LogOut,
-  Search,
-  UserRound,
-} from 'lucide-react';
+import { CalendarDays, HeartPulse, LogOut, Search, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { api } from '@/lib/api';
-import { clearSession, getStoredUser, getToken } from '@/lib/auth-storage';
+import { clearSession, getStoredUser } from '@/lib/auth-storage';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -25,42 +18,22 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
-  const user = ready ? getStoredUser() : null;
+
+  // Middleware garante que só chega aqui com sessão ativa
+  const user = getStoredUser();
 
   const profileQuery = useQuery({
     queryKey: ['profile'],
     queryFn: api.getProfile,
-    enabled: ready && Boolean(getToken()),
   });
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!getToken()) {
-        router.replace('/login');
-        return;
-      }
-
-      setReady(true);
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [router]);
 
   function logout() {
     clearSession();
     router.replace('/login');
   }
 
-  if (!ready) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#f6f8f5] text-[#20342f]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d9e7df] border-t-[#2f7d67]" />
-      </div>
-    );
-  }
-
   const displayName = profileQuery.data?.name ?? user?.name ?? 'Paciente';
+  const email = profileQuery.data?.email ?? user?.email ?? '';
 
   return (
     <div className="min-h-screen bg-[#f6f8f5] text-[#20342f]">
@@ -85,9 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               Conta ativa
             </p>
             <p className="mt-2 text-lg font-bold text-[#18352d]">{displayName}</p>
-            <p className="text-sm text-[#6d7c76]">
-              {profileQuery.data?.email ?? user?.email}
-            </p>
+            <p className="text-sm text-[#6d7c76]">{email}</p>
           </div>
 
           <nav className="mt-8 space-y-2">
@@ -136,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={logout}
                 className="rounded-full border border-[#dfe8e2] bg-white p-2 text-[#63736d]"
-                aria-label="Sair"
+                aria-label="Sair da conta"
               >
                 <LogOut size={18} />
               </button>
@@ -152,9 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     href={item.href}
                     className={cn(
                       'flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-bold',
-                      active
-                        ? 'bg-[#2f7d67] text-white'
-                        : 'bg-white text-[#63736d]',
+                      active ? 'bg-[#2f7d67] text-white' : 'bg-white text-[#63736d]',
                     )}
                   >
                     <Icon size={15} />
@@ -295,5 +264,3 @@ export function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-export { ClipboardList };

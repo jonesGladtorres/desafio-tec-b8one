@@ -1,4 +1,4 @@
-import { getToken } from './auth-storage';
+import { clearSession, getToken } from './auth-storage';
 import type {
   Appointment,
   AvailableSlotsResponse,
@@ -41,7 +41,6 @@ async function request<TResponse>(
 
   if (options.authenticated) {
     const token = getToken();
-
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -53,9 +52,15 @@ async function request<TResponse>(
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
 
-  const isJson = response.headers
-    .get('content-type')
-    ?.includes('application/json');
+  if (response.status === 401 && options.authenticated) {
+    clearSession();
+    if (typeof window !== 'undefined') {
+      window.location.replace('/login');
+    }
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+  }
+
+  const isJson = response.headers.get('content-type')?.includes('application/json');
   const payload = isJson ? ((await response.json()) as unknown) : null;
 
   if (!response.ok) {
@@ -66,16 +71,11 @@ async function request<TResponse>(
 }
 
 function readErrorMessage(payload: unknown): string {
-  if (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'message' in payload
-  ) {
+  if (typeof payload === 'object' && payload !== null && 'message' in payload) {
     const message = payload.message;
     return Array.isArray(message) ? message.join(', ') : String(message);
   }
-
-  return 'Nao foi possivel concluir a solicitacao.';
+  return 'Não foi possível concluir a solicitação.';
 }
 
 export const api = {
@@ -107,13 +107,8 @@ export const api = {
     return request<ExamDetails>(`/exams/${id}`);
   },
 
-  getAvailableSlots(
-    examId: string,
-    date: string,
-  ): Promise<AvailableSlotsResponse> {
-    return request<AvailableSlotsResponse>(
-      `/exams/${examId}/available-slots?date=${date}`,
-    );
+  getAvailableSlots(examId: string, date: string): Promise<AvailableSlotsResponse> {
+    return request<AvailableSlotsResponse>(`/exams/${examId}/available-slots?date=${date}`);
   },
 
   getProfile(): Promise<UserProfile> {

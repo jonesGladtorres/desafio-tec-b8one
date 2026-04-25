@@ -8,6 +8,7 @@ import {
   Clock3,
   ClipboardList,
 } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -19,6 +20,11 @@ import {
 } from '@/components/app-shell';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
+
+export const metadata: Metadata = {
+  title: 'Minha Agenda',
+  description: 'Acompanhe seus agendamentos de exames, horários confirmados e histórico na rede A&Eight Labs.',
+};
 
 const PAGE_SIZE = 6;
 
@@ -57,8 +63,8 @@ function AppointmentsContent() {
     <>
       <PortalHeader
         eyebrow="Minha agenda"
-        title="Seus proximos exames"
-        description="Acompanhe horarios confirmados, valores e status dos agendamentos feitos no portal."
+        title="Seus próximos exames"
+        description="Acompanhe horários confirmados, valores e status dos agendamentos feitos no portal."
         action={
           <Link
             href="/exams"
@@ -76,12 +82,12 @@ function AppointmentsContent() {
           icon={<CheckCircle2 size={20} />}
         />
         <StatPill
-          label="Nesta pagina"
+          label="Nesta página"
           value={String(appointments.length)}
           icon={<ClipboardList size={20} />}
         />
         <StatPill
-          label="Pagina"
+          label="Página"
           value={meta ? `${meta.page}/${meta.totalPages || 1}` : '1/1'}
           icon={<Clock3 size={20} />}
         />
@@ -90,17 +96,14 @@ function AppointmentsContent() {
       {appointmentsQuery.isLoading ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-36 animate-pulse rounded-[30px] bg-white/70"
-            />
+            <div key={index} className="h-36 animate-pulse rounded-[30px] bg-white/70" />
           ))}
         </div>
       ) : appointments.length === 0 ? (
         <EmptyState
           icon={<CalendarClock size={24} />}
           title="Nenhum agendamento por aqui"
-          description="Quando voce escolher um exame e confirmar um horario, ele aparece nesta agenda."
+          description="Quando você escolher um exame e confirmar um horário, ele aparecerá nesta agenda."
         />
       ) : (
         <div className="space-y-4">
@@ -119,10 +122,14 @@ function AppointmentsContent() {
                       <h2 className="text-xl font-black text-[#18352d]">
                         {appointment.exam.name}
                       </h2>
-                      <span className="rounded-full bg-[#eef6f2] px-3 py-1 text-xs font-black text-[#2f7d67]">
-                        {appointment.status === 'SCHEDULED'
-                          ? 'Confirmado'
-                          : 'Cancelado'}
+                      <span
+                        className={
+                          appointment.status === 'SCHEDULED'
+                            ? 'rounded-full bg-[#eef6f2] px-3 py-1 text-xs font-black text-[#2f7d67]'
+                            : 'rounded-full bg-[#fff1ef] px-3 py-1 text-xs font-black text-[#9a4d45]'
+                        }
+                      >
+                        {appointment.status === 'SCHEDULED' ? 'Confirmado' : 'Cancelado'}
                       </span>
                     </div>
                     <p className="mt-2 text-sm font-bold text-[#63736d]">
@@ -169,23 +176,21 @@ function AppointmentsContent() {
             Anterior
           </GhostButton>
           <p className="text-sm font-bold text-[#63736d]">
-            Pagina {meta.page} de {meta.totalPages}
+            Página {meta.page} de {meta.totalPages}
           </p>
           <GhostButton
             type="button"
             disabled={page >= meta.totalPages}
-            onClick={() =>
-              setPage((current) => Math.min(current + 1, meta.totalPages))
-            }
+            onClick={() => setPage((current) => Math.min(current + 1, meta.totalPages))}
           >
-            Proxima
+            Próxima
           </GhostButton>
         </div>
       ) : null}
 
       {cancelMutation.error ? (
         <p className="mt-4 rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
-          Nao foi possivel cancelar este agendamento.
+          Não foi possível cancelar este agendamento.
         </p>
       ) : null}
     </>

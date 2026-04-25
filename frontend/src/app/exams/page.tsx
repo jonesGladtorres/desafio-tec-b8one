@@ -1,16 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  ArrowRight,
-  Clock3,
-  Filter,
-  Search,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, Clock3, Filter, Search, ShieldCheck, Sparkles } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   AppShell,
   EmptyState,
@@ -18,8 +12,15 @@ import {
   PortalHeader,
   StatPill,
 } from '@/components/app-shell';
+import { useDebounce } from '@/hooks/use-debounce';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/formatters';
+
+export const metadata: Metadata = {
+  title: 'Catálogo de Exames',
+  description:
+    'Consulte os exames disponíveis na rede A&Eight Labs, veja preparo, duração estimada e agende online.',
+};
 
 const PAGE_SIZE = 9;
 
@@ -34,7 +35,7 @@ export default function ExamsPage() {
 function ExamsContent() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const debouncedSearch = useMemo(() => search.trim(), [search]);
+  const debouncedSearch = useDebounce(search.trim(), 300);
 
   const examsQuery = useQuery({
     queryKey: ['exams', { page, search: debouncedSearch }],
@@ -52,9 +53,9 @@ function ExamsContent() {
   return (
     <>
       <PortalHeader
-        eyebrow="Catalogo de exames"
+        eyebrow="Catálogo de exames"
         title="Encontre o exame certo"
-        description="Consulte os exames disponiveis, veja preparo, duracao estimada e escolha o melhor horario para sua rotina."
+        description="Consulte os exames disponíveis, veja preparo, duração estimada e escolha o melhor horário para sua rotina."
         action={
           <div className="rounded-[22px] border border-[#dce8e1] bg-white px-4 py-3 text-sm font-bold text-[#315348] shadow-sm">
             Rede A&Eight Labs
@@ -65,11 +66,7 @@ function ExamsContent() {
       <section className="mb-7 grid gap-4 md:grid-cols-3">
         <StatPill label="Exames ativos" value="10+" icon={<Sparkles size={20} />} />
         <StatPill label="Cache de busca" value="5 min" icon={<Filter size={20} />} />
-        <StatPill
-          label="Agendamento"
-          value="Online"
-          icon={<ShieldCheck size={20} />}
-        />
+        <StatPill label="Agendamento" value="Online" icon={<ShieldCheck size={20} />} />
       </section>
 
       <section className="mb-7 rounded-[30px] border border-[#dfe8e2] bg-white p-4 shadow-[0_18px_60px_rgba(44,75,66,0.08)]">
@@ -90,10 +87,7 @@ function ExamsContent() {
       {examsQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-56 animate-pulse rounded-[30px] bg-white/70"
-            />
+            <div key={index} className="h-56 animate-pulse rounded-[30px] bg-white/70" />
           ))}
         </div>
       ) : exams.length === 0 ? (
@@ -118,19 +112,14 @@ function ExamsContent() {
                   {formatCurrency(exam.priceCents)}
                 </span>
               </div>
-              <h2 className="mt-6 text-xl font-black text-[#18352d]">
-                {exam.name}
-              </h2>
+              <h2 className="mt-6 text-xl font-black text-[#18352d]">{exam.name}</h2>
               <p className="mt-3 text-sm leading-6 text-[#6a7a73]">
-                Duracao estimada de {exam.durationInMinutes} minutos, com
-                confirmacao imediata no portal.
+                Duração estimada de {exam.durationInMinutes} minutos, com confirmação
+                imediata no portal.
               </p>
               <div className="mt-6 flex items-center justify-between text-sm font-bold text-[#2f7d67]">
                 Ver detalhes
-                <ArrowRight
-                  size={18}
-                  className="transition group-hover:translate-x-1"
-                />
+                <ArrowRight size={18} className="transition group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
@@ -147,16 +136,14 @@ function ExamsContent() {
             Anterior
           </GhostButton>
           <p className="text-sm font-bold text-[#63736d]">
-            Pagina {meta.page} de {meta.totalPages}
+            Página {meta.page} de {meta.totalPages}
           </p>
           <GhostButton
             type="button"
             disabled={page >= meta.totalPages}
-            onClick={() =>
-              setPage((current) => Math.min(current + 1, meta.totalPages))
-            }
+            onClick={() => setPage((current) => Math.min(current + 1, meta.totalPages))}
           >
-            Proxima
+            Próxima
           </GhostButton>
         </div>
       ) : null}
