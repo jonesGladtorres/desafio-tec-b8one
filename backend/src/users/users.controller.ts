@@ -1,13 +1,15 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiHeader,
   ApiOkResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserProfileResponse, UsersService } from './users.service';
 
 @ApiTags('users')
@@ -37,5 +39,24 @@ export class UsersController {
   })
   me(@CurrentUser() user: AuthenticatedUser): Promise<UserProfileResponse> {
     return this.usersService.getProfile(user.id);
+  }
+
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    schema: {
+      example: {
+        id: '8b931f23-b309-41ce-bcbf-8f321d92d077',
+        name: 'Patient Demo',
+        email: 'patient@example.com',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Current password is incorrect.' })
+  updateMe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<{ id: string; name: string; email: string }> {
+    return this.usersService.updateProfile(user.id, dto);
   }
 }
