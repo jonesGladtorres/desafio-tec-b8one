@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, HeartPulse, LogOut, Search, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo, useSyncExternalStore } from 'react';
 import { api } from '@/lib/api';
-import { clearSession, getStoredUser } from '@/lib/auth-storage';
+import { clearSession, getStoredUserRaw } from '@/lib/auth-storage';
+import type { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -15,12 +16,36 @@ const navItems = [
   { href: '/profile', label: 'Perfil', icon: UserRound },
 ];
 
+function subscribeToStoredUser(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => undefined;
+
+  window.addEventListener('storage', onStoreChange);
+  return () => window.removeEventListener('storage', onStoreChange);
+}
+
+function getServerStoredUserSnapshot() {
+  return null;
+}
+
+function parseStoredUser(raw: string | null): User | null {
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-
-  // Middleware garante que só chega aqui com sessão ativa
-  const user = getStoredUser();
+  const storedUserRaw = useSyncExternalStore(
+    subscribeToStoredUser,
+    getStoredUserRaw,
+    getServerStoredUserSnapshot,
+  );
+  const storedUser = useMemo(() => parseStoredUser(storedUserRaw), [storedUserRaw]);
 
   const profileQuery = useQuery({
     queryKey: ['profile'],
@@ -32,8 +57,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     router.replace('/login');
   }
 
-  const displayName = profileQuery.data?.name ?? user?.name ?? 'Paciente';
-  const email = profileQuery.data?.email ?? user?.email ?? '';
+  const displayName = profileQuery.data?.name ?? storedUser?.name ?? 'Paciente';
+  const email = profileQuery.data?.email ?? storedUser?.email ?? '';
 
   return (
     <div className="min-h-screen bg-[#f6f8f5] text-[#20342f]">
@@ -134,7 +159,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </nav>
           </header>
 
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="animate-page-enter mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>

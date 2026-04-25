@@ -22,6 +22,11 @@ export function getStoredUser(): User | null {
   }
 }
 
+export function getStoredUserRaw(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(USER_KEY);
+}
+
 export function persistSession(session: LoginResponse): void {
   window.localStorage.setItem(TOKEN_KEY, session.accessToken);
   window.localStorage.setItem(USER_KEY, JSON.stringify(session.user));

@@ -21,6 +21,7 @@ import {
   StatPill,
 } from '@/components/app-shell';
 import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { useNotifications } from '@/components/ui/notification-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/formatters';
@@ -187,6 +188,7 @@ function EditProfileForm({
   onCancel: () => void;
   onSuccess: () => void;
 }) {
+  const { notify } = useNotifications();
   const form = useZodForm(updateProfileSchema, {
     name: profile.name,
     email: profile.email,
@@ -212,7 +214,21 @@ function EditProfileForm({
       }
       return api.updateProfile(payload);
     },
-    onSuccess,
+    onSuccess: () => {
+      notify({
+        type: 'success',
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram salvas com sucesso.',
+      });
+      onSuccess();
+    },
+    onError: () => {
+      notify({
+        type: 'error',
+        title: 'Perfil não atualizado',
+        description: 'Revise os dados informados e tente novamente.',
+      });
+    },
   });
 
   function submit(e: React.FormEvent) {

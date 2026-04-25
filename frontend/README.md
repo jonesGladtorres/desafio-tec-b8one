@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend
 
-## Getting Started
+Aplicacao Next.js do Portal do Paciente para busca, visualizacao e agendamento de exames.
 
-First, run the development server:
+Para rodar o projeto completo com frontend, backend, PostgreSQL e Redis, use o Docker Compose documentado no [README da raiz](../README.md).
+
+## Stack
+
+- Next.js App Router
+- React
+- TypeScript
+- React Query
+- Lucide React
+- CSS utilitario com Tailwind
+
+## Variaveis de ambiente
+
+Crie um `.env.local` a partir do exemplo:
+
+```bash
+cp .env.example .env.local
+```
+
+Para rodar o frontend localmente contra o backend local:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+API_INTERNAL_URL=http://localhost:8000
+```
+
+No Docker Compose da raiz, o frontend usa:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+API_INTERNAL_URL=http://backend:8000
+```
+
+Essa separacao permite que o browser acesse a API pela porta publica `8000`, enquanto rotas server-side do Next chamam o backend pelo nome do servico Docker.
+
+## Rodar apenas o frontend localmente
+
+Antes, garanta que o backend esteja rodando em `http://localhost:8000`.
+
+Instale dependencias:
+
+```bash
+cd frontend
+npm install
+```
+
+Inicie em desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+URL local:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3001
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Observacao: quando o projeto roda pelo Docker Compose da raiz, o frontend fica publicado em `http://localhost:3000`.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev            # desenvolvimento na porta 3001
+npm run build          # build de producao
+npm run start          # servidor de producao na porta 3001
+npm run lint           # lint
+npm run test:run       # testes
+npm run test:coverage  # cobertura
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fluxos implementados
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Login e cadastro.
+- Catalogo de exames com busca.
+- Tela de detalhes do exame.
+- Tela dedicada para agendamento.
+- Confirmacao de agendamento por modal.
+- Agenda do paciente com cancelamento por modal.
+- Perfil do paciente com edicao de dados.
+- Toasts para sucesso, erro e informacoes do fluxo.
 
-## Deploy on Vercel
+## Credenciais de teste
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Com o seed do backend executado:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+E-mail: patient@example.com
+Senha: Password123!
+```

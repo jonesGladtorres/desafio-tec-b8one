@@ -1,11 +1,14 @@
 import type { MetadataRoute } from 'next';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const SERVER_API_URL =
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:8000';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001';
 
 async function fetchExamIds(): Promise<string[]> {
   try {
-    const response = await fetch(`${API_URL}/exams?page=1&limit=100`, {
+    const response = await fetch(`${SERVER_API_URL}/exams?page=1&limit=100`, {
       headers: { 'X-API-Version': '1' },
       next: { revalidate: 3600 },
     });

@@ -17,8 +17,11 @@ import {
   PortalHeader,
   StatPill,
 } from '@/components/app-shell';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useNotifications } from '@/components/ui/notification-provider';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
+import type { Appointment } from '@/lib/types';
 
 const PAGE_SIZE = 6;
 
@@ -32,7 +35,11 @@ export default function AppointmentsPage() {
 
 function AppointmentsContent() {
   const queryClient = useQueryClient();
+  const { notify } = useNotifications();
   const [page, setPage] = useState(1);
+  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(
+    null,
+  );
 
   const appointmentsQuery = useQuery({
     queryKey: ['appointments', page],
@@ -41,9 +48,26 @@ function AppointmentsContent() {
 
   const cancelMutation = useMutation({
     mutationFn: api.cancelAppointment,
-    onSuccess: async () => {
+    onSuccess: async (_, appointmentId) => {
       await queryClient.invalidateQueries({ queryKey: ['appointments'] });
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      const canceledAppointment =
+        appointmentToCancel?.id === appointmentId ? appointmentToCancel : null;
+      setAppointmentToCancel(null);
+      notify({
+        type: 'success',
+        title: 'Agendamento cancelado',
+        description: canceledAppointment
+          ? `${canceledAppointment.exam.name} foi removido da sua agenda.`
+          : 'O agendamento foi cancelado com sucesso.',
+      });
+    },
+    onError: () => {
+      notify({
+        type: 'error',
+        title: 'Cancelamento não realizado',
+        description: 'Não foi possível cancelar este agendamento agora. Tente novamente.',
+      });
     },
   });
 
@@ -147,7 +171,7 @@ function AppointmentsContent() {
                     <GhostButton
                       type="button"
                       disabled={cancelMutation.isPending}
-                      onClick={() => cancelMutation.mutate(appointment.id)}
+                      onClick={() => setAppointmentToCancel(appointment)}
                     >
                       <CalendarX2 size={18} />
                       Cancelar
@@ -187,6 +211,34 @@ function AppointmentsContent() {
           Não foi possível cancelar este agendamento.
         </p>
       ) : null}
+
+      <ConfirmDialog
+        open={!!appointmentToCancel}
+        destructive
+        pending={cancelMutation.isPending}
+        title="Cancelar agendamento?"
+        description="Essa ação é irreversivel e libera o horário para outros pacientes."
+        confirmLabel="Cancelar agendamento"
+        cancelLabel="Manter agendamento"
+        onCancel={() => {
+          if (!cancelMutation.isPending) setAppointmentToCancel(null);
+        }}
+        onConfirm={() => {
+          if (appointmentToCancel) cancelMutation.mutate(appointmentToCancel.id);
+        }}
+        details={
+          appointmentToCancel ? (
+            <div>
+              <p className="text-sm font-black text-[#18352d]">
+                {appointmentToCancel.exam.name}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#6f8279]">
+                {formatDateTime(appointmentToCancel.scheduledAt)}
+              </p>
+            </div>
+          ) : null
+        }
+      />
     </>
   );
 }

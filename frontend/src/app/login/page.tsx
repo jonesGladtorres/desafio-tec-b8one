@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
 import { SoftButton } from '@/components/app-shell';
-import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { useNotifications } from '@/components/ui/notification-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
@@ -14,6 +15,7 @@ import { loginSchema } from '@/lib/schemas';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { notify } = useNotifications();
   const form = useZodForm(loginSchema, { email: '', password: '' });
 
   const loginMutation = useMutation({
@@ -21,6 +23,16 @@ export default function LoginPage() {
     onSuccess: (session) => {
       persistSession(session);
       router.replace('/exams');
+    },
+    onError: (error) => {
+      notify({
+        type: 'error',
+        title: 'Não foi possível entrar',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Confira seus dados e tente novamente.',
+      });
     },
   });
 
@@ -30,13 +42,6 @@ export default function LoginPage() {
     if (!data) return;
     loginMutation.mutate();
   }
-
-  const errorMessage =
-    loginMutation.error instanceof ApiError
-      ? loginMutation.error.message
-      : loginMutation.error
-        ? 'Não foi possível entrar agora. Tente novamente.'
-        : null;
 
   return (
     <main className="soft-grid grid min-h-screen place-items-center bg-[#f6f8f5] px-4 py-10">
@@ -132,8 +137,6 @@ export default function LoginPage() {
                 error={!!form.errors.password}
               />
             </FormField>
-
-            {errorMessage ? <ErrorAlert message={errorMessage} /> : null}
 
             <SoftButton
               type="submit"
