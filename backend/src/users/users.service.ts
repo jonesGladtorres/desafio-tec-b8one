@@ -61,7 +61,9 @@ export class UsersService {
     dto: UpdateProfileDto,
   ): Promise<{ id: string; name: string; email: string }> {
     if (dto.currentPassword !== undefined && dto.newPassword === undefined) {
-      throw new BadRequestException('newPassword is required when currentPassword is provided.');
+      throw new BadRequestException(
+        'newPassword is required when currentPassword is provided.',
+      );
     }
 
     const user = await this.prisma.user.findUnique({ where: { id } });
@@ -69,7 +71,11 @@ export class UsersService {
       throw new NotFoundException('User not found.');
     }
 
-    const updateData: Partial<{ name: string; email: string; passwordHash: string }> = {};
+    const updateData: Partial<{
+      name: string;
+      email: string;
+      passwordHash: string;
+    }> = {};
 
     if (dto.name !== undefined) {
       updateData.name = dto.name.trim();
@@ -87,7 +93,10 @@ export class UsersService {
     }
 
     if (dto.currentPassword !== undefined && dto.newPassword !== undefined) {
-      const passwordMatches = await compare(dto.currentPassword, user.passwordHash);
+      const passwordMatches = await compare(
+        dto.currentPassword,
+        user.passwordHash,
+      );
       if (!passwordMatches) {
         throw new UnauthorizedException('Current password is incorrect.');
       }
@@ -98,7 +107,10 @@ export class UsersService {
       return { id: user.id, name: user.name, email: user.email };
     }
 
-    const updated = await this.prisma.user.update({ where: { id }, data: updateData });
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+    });
     return { id: updated.id, name: updated.name, email: updated.email };
   }
 

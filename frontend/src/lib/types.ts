@@ -6,9 +6,17 @@ export type User = {
 
 export type LoginResponse = {
   accessToken: string;
+  refreshToken: string;
   tokenType: 'Bearer';
   expiresIn: string;
   user: User;
+};
+
+export type RefreshResponse = {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: 'Bearer';
+  expiresIn: string;
 };
 
 export type ExamSummary = {

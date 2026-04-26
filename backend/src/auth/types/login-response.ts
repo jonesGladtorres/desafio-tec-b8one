@@ -1,5 +1,6 @@
 export type LoginResponse = {
   accessToken: string;
+  refreshToken: string;
   tokenType: 'Bearer';
   expiresIn: string;
   user: {
@@ -7,4 +8,11 @@ export type LoginResponse = {
     name: string;
     email: string;
   };
+};
+
+export type RefreshResponse = {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: 'Bearer';
+  expiresIn: string;
 };

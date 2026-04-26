@@ -1,4 +1,9 @@
-import { clearSession, getToken } from './auth-storage';
+import {
+  clearSession,
+  getRefreshToken,
+  getToken,
+  updateAccessToken,
+} from './auth-storage';
 import type {
   Appointment,
   AvailableSlotsResponse,
@@ -6,6 +11,7 @@ import type {
   ExamSummary,
   LoginResponse,
   PaginatedResponse,
+  RefreshResponse,
   UpdateProfileResponse,
   UserProfile,
 } from './types';
@@ -28,10 +34,41 @@ export class ApiError extends Error {
   }
 }
 
-async function request<TResponse>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<TResponse> {
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function tryRefresh(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          [API_VERSION_HEADER]: '1',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = (await response.json()) as RefreshResponse;
+      updateAccessToken(data.accessToken, data.refreshToken);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+async function performRequest(path: string, options: RequestOptions): Promise<Response> {
   const headers = new Headers({
     [API_VERSION_HEADER]: '1',
   });
@@ -47,18 +84,32 @@ async function request<TResponse>(
     }
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  return fetch(`${API_URL}${path}`, {
     method: options.method ?? 'GET',
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
+}
+
+async function request<TResponse>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<TResponse> {
+  let response = await performRequest(path, options);
 
   if (response.status === 401 && options.authenticated) {
-    clearSession();
-    if (typeof window !== 'undefined') {
-      window.location.replace('/login');
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      response = await performRequest(path, options);
     }
-    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+
+    if (response.status === 401) {
+      clearSession();
+      if (typeof window !== 'undefined') {
+        window.location.replace('/login');
+      }
+      throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+    }
   }
 
   const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -91,6 +142,14 @@ export const api = {
     return request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: { email, password },
+    });
+  },
+
+  logout(refreshToken: string): Promise<void> {
+    return request<void>('/auth/logout', {
+      method: 'POST',
+      authenticated: true,
+      body: { refreshToken },
     });
   },
 

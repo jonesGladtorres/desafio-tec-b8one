@@ -1,19 +1,20 @@
 # Frontend
 
-Aplicacao Next.js do Portal do Paciente para busca, visualizacao e agendamento de exames.
+Aplicação Next.js do Portal do Paciente — busca, visualização e agendamento de exames.
 
-Para rodar o projeto completo com frontend, backend, PostgreSQL e Redis, use o Docker Compose documentado no [README da raiz](../README.md).
+Para rodar o projeto completo (frontend, backend, PostgreSQL e Redis), use o Docker Compose documentado no [README da raiz](../README.md).
 
 ## Stack
 
-- Next.js App Router
-- React
-- TypeScript
-- React Query
-- Lucide React
-- CSS utilitario com Tailwind
+- Next.js 16 (App Router)
+- React 19
+- TypeScript estrito (sem `any`)
+- React Query (`@tanstack/react-query`)
+- Zod para validação de formulários
+- Tailwind CSS 4
+- Vitest + Testing Library
 
-## Variaveis de ambiente
+## Variáveis de ambiente
 
 Crie um `.env.local` a partir do exemplo:
 
@@ -35,13 +36,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 API_INTERNAL_URL=http://backend:8000
 ```
 
-Essa separacao permite que o browser acesse a API pela porta publica `8000`, enquanto rotas server-side do Next chamam o backend pelo nome do servico Docker.
+Essa separação permite que o browser acesse a API pela porta pública `8000`, enquanto rotas server-side do Next chamam o backend pelo nome do serviço Docker.
 
 ## Rodar apenas o frontend localmente
 
 Antes, garanta que o backend esteja rodando em `http://localhost:8000`.
 
-Instale dependencias:
+Instale dependências:
 
 ```bash
 cd frontend
@@ -60,14 +61,14 @@ URL local:
 http://localhost:3001
 ```
 
-Observacao: quando o projeto roda pelo Docker Compose da raiz, o frontend fica publicado em `http://localhost:3000`.
+Observação: quando o projeto roda pelo Docker Compose da raiz, o frontend fica publicado em `http://localhost:3000`.
 
 ## Scripts
 
 ```bash
 npm run dev            # desenvolvimento na porta 3001
-npm run build          # build de producao
-npm run start          # servidor de producao na porta 3001
+npm run build          # build de produção
+npm run start          # servidor de produção na porta 3001
 npm run lint           # lint
 npm run test:run       # testes
 npm run test:coverage  # cobertura
@@ -75,14 +76,16 @@ npm run test:coverage  # cobertura
 
 ## Fluxos implementados
 
-- Login e cadastro.
-- Catalogo de exames com busca.
-- Tela de detalhes do exame.
-- Tela dedicada para agendamento.
-- Confirmacao de agendamento por modal.
-- Agenda do paciente com cancelamento por modal.
-- Perfil do paciente com edicao de dados.
-- Toasts para sucesso, erro e informacoes do fluxo.
+- Login e cadastro com validação Zod.
+- Catálogo de exames com busca e cache (React Query + Redis no backend).
+- Tela de detalhes do exame com SEO dinâmico (Open Graph, Twitter, JSON-LD `MedicalTest`).
+- Tela dedicada de agendamento com seleção de data, períodos do dia e observações.
+- Confirmação de agendamento por modal com lock de scroll.
+- Agenda do paciente com cancelamento idempotente.
+- Perfil do paciente com edição de dados e troca de senha.
+- Toasts acessíveis (`aria-live`) para sucesso, erro e informações.
+- Refresh token transparente — interceptador renova access token antes de cair no `/login`.
+- Logout server-side (revoga refresh) + limpeza local.
 
 ## Credenciais de teste
 

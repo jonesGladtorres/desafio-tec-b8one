@@ -18,6 +18,10 @@ export class RedisService implements OnModuleDestroy {
     });
   }
 
+  getClient(): Redis {
+    return this.client;
+  }
+
   async getJson<TValue>(key: string): Promise<TValue | null> {
     try {
       const cached = await this.client.get(key);
@@ -40,6 +44,19 @@ export class RedisService implements OnModuleDestroy {
     } catch (error) {
       this.logger.warn(
         `Failed to write cache key "${key}": ${this.messageOf(error)}`,
+      );
+    }
+  }
+
+  async deleteByPattern(pattern: string): Promise<void> {
+    try {
+      const keys = await this.client.keys(pattern);
+      if (keys.length > 0) {
+        await this.client.del(keys);
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to delete cache pattern "${pattern}": ${this.messageOf(error)}`,
       );
     }
   }

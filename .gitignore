@@ -1,3 +1,15 @@
 .DS_Store
 .playwright-cli/
 output/playwright/
+
+# Local env (segredos não vão para o git)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Dependências e artefatos do monorepo
+node_modules/
+coverage/
+backend/coverage/
+frontend/coverage/
