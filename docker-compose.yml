@@ -3,14 +3,15 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
-        API_INTERNAL_URL: http://backend:8000
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://backend:8000}
     container_name: exams-portal-frontend
     depends_on:
       - backend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      API_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://backend:8000}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NODE_ENV: production
     ports:
       - "3000:3001"
@@ -26,25 +27,33 @@ services:
         condition: service_healthy
     environment:
       API_VERSION_HEADER: X-API-Version
-      CORS_ORIGIN: http://localhost:3000
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/exams_portal?schema=public
-      JWT_EXPIRES_IN: 15m
-      JWT_SECRET: change-me-in-production-change-me-in-production
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-exams_portal}?schema=public
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — copy .env.example to .env}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required — copy .env.example to .env}
       NODE_ENV: production
       PORT: 8000
       REDIS_URL: redis://redis:6379
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--header=X-API-Version: 1", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   postgres:
     image: postgres:16-alpine
     container_name: exams-portal-postgres
     environment:
-      POSTGRES_DB: exams_portal
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-exams_portal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d exams_portal"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-exams_portal}"]
       interval: 5s
       timeout: 5s
       retries: 10
