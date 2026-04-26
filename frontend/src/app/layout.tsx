@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { QueryProvider } from '@/components/query-provider';
+import { NotificationProvider } from '@/components/ui/notification-provider';
 import './globals.css';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001';
@@ -50,7 +51,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full">
-        <QueryProvider>{children}</QueryProvider>
+        <NotificationProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

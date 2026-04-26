@@ -5,24 +5,31 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const SERVER_API_URL =
+  process.env.API_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:8000';
 
 async function fetchExamServer(id: string) {
-  const response = await fetch(`${API_URL}/exams/${id}`, {
-    headers: { 'X-API-Version': '1' },
-    next: { revalidate: 300 },
-  });
+  try {
+    const response = await fetch(`${SERVER_API_URL}/exams/${id}`, {
+      headers: { 'X-API-Version': '1' },
+      next: { revalidate: 300 },
+    });
 
-  if (!response.ok) return null;
+    if (!response.ok) return null;
 
-  return response.json() as Promise<{
-    id: string;
-    name: string;
-    description: string;
-    durationInMinutes: number;
-    priceCents: number;
-    preparationInstructions: string | null;
-  }>;
+    return response.json() as Promise<{
+      id: string;
+      name: string;
+      description: string;
+      durationInMinutes: number;
+      priceCents: number;
+      preparationInstructions: string | null;
+    }>;
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

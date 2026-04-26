@@ -1,16 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Clock3, Filter, Search, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, CalendarCheck, Clock3, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import {
-  AppShell,
-  EmptyState,
-  GhostButton,
-  PortalHeader,
-  StatPill,
-} from '@/components/app-shell';
+import { AppShell, EmptyState, GhostButton, PortalHeader } from '@/components/app-shell';
 import { useDebounce } from '@/hooks/use-debounce';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/formatters';
@@ -56,12 +50,6 @@ function ExamsContent() {
         }
       />
 
-      <section className="mb-7 grid gap-4 md:grid-cols-3">
-        <StatPill label="Exames ativos" value="10+" icon={<Sparkles size={20} />} />
-        <StatPill label="Cache de busca" value="5 min" icon={<Filter size={20} />} />
-        <StatPill label="Agendamento" value="Online" icon={<ShieldCheck size={20} />} />
-      </section>
-
       <section className="mb-7 rounded-[30px] border border-[#dfe8e2] bg-white p-4 shadow-[0_18px_60px_rgba(44,75,66,0.08)]">
         <label className="flex min-h-14 items-center gap-3 rounded-[22px] bg-[#f7faf8] px-4">
           <Search size={20} className="text-[#6f8279]" />
@@ -72,7 +60,7 @@ function ExamsContent() {
               setPage(1);
             }}
             placeholder="Buscar por nome do exame"
-            className="h-14 min-w-0 flex-1 bg-transparent text-base font-semibold text-[#18352d] placeholder:text-[#8b9993]"
+            className="h-14 min-w-0 flex-1 bg-transparent text-base font-semibold text-[#18352d] placeholder:text-[#8b9993] outline-none"
           />
         </label>
       </section>
@@ -92,10 +80,9 @@ function ExamsContent() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {exams.map((exam) => (
-            <Link
+            <article
               key={exam.id}
-              href={`/exams/${exam.id}`}
-              className="group rounded-[30px] border border-[#dfe8e2] bg-white p-6 shadow-[0_18px_60px_rgba(44,75,66,0.08)] transition hover:-translate-y-1 hover:border-[#bad6ca] hover:shadow-[0_24px_70px_rgba(44,75,66,0.12)]"
+              className="rounded-[30px] border border-[#dfe8e2] bg-white p-6 shadow-[0_18px_60px_rgba(44,75,66,0.08)] transition hover:-translate-y-1 hover:border-[#bad6ca] hover:shadow-[0_24px_70px_rgba(44,75,66,0.12)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#eef6f2] text-[#2f7d67]">
@@ -110,11 +97,23 @@ function ExamsContent() {
                 Duração estimada de {exam.durationInMinutes} minutos, com confirmação
                 imediata no portal.
               </p>
-              <div className="mt-6 flex items-center justify-between text-sm font-bold text-[#2f7d67]">
-                Ver detalhes
-                <ArrowRight size={18} className="transition group-hover:translate-x-1" />
+              <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <Link
+                  href={`/exams/${exam.id}`}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[#dbe7e1] bg-[#f8fbf9] px-4 text-sm font-bold text-[#315348] transition hover:border-[#9fc5b5] hover:bg-white"
+                >
+                  Ver detalhes
+                  <ArrowRight size={17} />
+                </Link>
+                <Link
+                  href={`/exams/${exam.id}/schedule`}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2f7d67] px-4 text-sm font-bold text-white shadow-[0_12px_26px_rgba(47,125,103,0.18)] transition hover:bg-[#276b58]"
+                >
+                  <CalendarCheck size={17} />
+                  Agendar
+                </Link>
               </div>
-            </Link>
+            </article>
           ))}
         </div>
       )}
