@@ -10,9 +10,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npm run prisma:generate
 
-COPY tsconfig*.json nest-cli.json prisma.config.ts ./
+COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
 RUN npm run build
 
@@ -33,6 +34,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY prisma ./prisma
+COPY prisma.config.ts ./
+COPY tsconfig*.json ./
 
 EXPOSE 8000
 
