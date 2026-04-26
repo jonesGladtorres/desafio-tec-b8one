@@ -9,6 +9,10 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 
+const BUSINESS_START_HOUR_UTC = 8;
+const BUSINESS_END_HOUR_UTC = 17;
+const SLOT_INTERVAL_MINUTES = 30;
+
 export type AppointmentResponse = {
   id: string;
   scheduledAt: string;
@@ -47,6 +51,8 @@ export class AppointmentsService {
         'Appointment must be scheduled in the future.',
       );
     }
+
+    this.assertBusinessHours(scheduledAt);
 
     try {
       const appointment = await this.prisma.$transaction(
@@ -164,7 +170,7 @@ export class AppointmentsService {
     }
 
     if (appointment.status === AppointmentStatus.CANCELED) {
-      return this.toResponse(appointment);
+      throw new ConflictException('Appointment is already canceled.');
     }
 
     if (appointment.scheduledAt <= new Date()) {
@@ -184,6 +190,26 @@ export class AppointmentsService {
     });
 
     return this.toResponse(canceled);
+  }
+
+  private assertBusinessHours(date: Date): void {
+    const hour = date.getUTCHours();
+    const minute = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+    const ms = date.getUTCMilliseconds();
+
+    const isOnSlotBoundary =
+      seconds === 0 && ms === 0 && minute % SLOT_INTERVAL_MINUTES === 0;
+    const isWithinBusinessHours =
+      hour >= BUSINESS_START_HOUR_UTC &&
+      (hour < BUSINESS_END_HOUR_UTC ||
+        (hour === BUSINESS_END_HOUR_UTC && minute === 30));
+
+    if (!isOnSlotBoundary || !isWithinBusinessHours) {
+      throw new BadRequestException(
+        `Slot must fall on a ${SLOT_INTERVAL_MINUTES}-minute boundary between ${BUSINESS_START_HOUR_UTC.toString().padStart(2, '0')}:00 and ${BUSINESS_END_HOUR_UTC.toString().padStart(2, '0')}:30 UTC.`,
+      );
+    }
   }
 
   private toResponse(
