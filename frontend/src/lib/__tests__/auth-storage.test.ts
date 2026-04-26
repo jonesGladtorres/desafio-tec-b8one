@@ -4,6 +4,7 @@ import type { LoginResponse } from '../types';
 
 const mockSession: LoginResponse = {
   accessToken: 'eyJhbGciOiJIUzI1NiJ9.test.signature',
+  refreshToken: 'eyJhbGciOiJIUzI1NiJ9.refresh.signature',
   tokenType: 'Bearer',
   expiresIn: '15m',
   user: { id: 'uuid-123', name: 'Patient Demo', email: 'patient@example.com' },

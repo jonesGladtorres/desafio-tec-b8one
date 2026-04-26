@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useMemo, useSyncExternalStore } from 'react';
 import { api } from '@/lib/api';
-import { clearSession, getStoredUserRaw } from '@/lib/auth-storage';
+import { clearSession, getRefreshToken, getStoredUserRaw } from '@/lib/auth-storage';
 import type { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +53,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   });
 
   function logout() {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      // Fire-and-forget: revoga o refresh server-side mas não bloqueia o redirect.
+      api.logout(refreshToken).catch(() => undefined);
+    }
     clearSession();
     router.replace('/login');
   }
