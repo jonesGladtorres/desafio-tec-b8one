@@ -7,6 +7,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from './cache/cache.module';
+import { CommonModule } from './common/common.module';
 import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { ExamsModule } from './exams/exams.module';
@@ -78,6 +79,7 @@ import { UsersModule } from './users/users.module';
         ),
       }),
     }),
+    CommonModule,
     DatabaseModule,
     CacheModule,
     HealthModule,

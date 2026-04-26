@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AppShell,
   GhostButton,
@@ -20,7 +20,7 @@ import {
   SoftButton,
   StatPill,
 } from '@/components/app-shell';
-import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
 import { useNotifications } from '@/components/ui/notification-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
@@ -37,12 +37,25 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const queryClient = useQueryClient();
+  const { notify } = useNotifications();
   const [editing, setEditing] = useState(false);
 
   const profileQuery = useQuery({
     queryKey: ['profile'],
     queryFn: api.getProfile,
   });
+
+  useEffect(() => {
+    if (!profileQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Não foi possível carregar seu perfil',
+      description:
+        profileQuery.error instanceof ApiError
+          ? profileQuery.error.message
+          : 'Tente novamente em instantes.',
+    });
+  }, [profileQuery.isError, profileQuery.error, notify]);
 
   const profile = profileQuery.data;
 
@@ -222,11 +235,14 @@ function EditProfileForm({
       });
       onSuccess();
     },
-    onError: () => {
+    onError: (error) => {
       notify({
         type: 'error',
         title: 'Perfil não atualizado',
-        description: 'Revise os dados informados e tente novamente.',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Revise os dados informados e tente novamente.',
       });
     },
   });
@@ -237,13 +253,6 @@ function EditProfileForm({
     if (!data) return;
     updateMutation.mutate();
   }
-
-  const errorMessage =
-    updateMutation.error instanceof ApiError
-      ? updateMutation.error.message
-      : updateMutation.error
-        ? 'Não foi possível atualizar o perfil.'
-        : null;
 
   return (
     <div className="rounded-[34px] border border-[#dfe8e2] bg-white p-6 shadow-[0_18px_60px_rgba(44,75,66,0.08)]">
@@ -320,8 +329,6 @@ function EditProfileForm({
             </FormField>
           </div>
         </div>
-
-        {errorMessage ? <ErrorAlert message={errorMessage} /> : null}
 
         <div className="flex gap-3">
           <SoftButton type="submit" disabled={updateMutation.isPending}>

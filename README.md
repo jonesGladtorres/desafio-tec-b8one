@@ -152,8 +152,8 @@ make dev
 ## Qualidade
 
 - ESLint + TypeScript em ambos os projetos.
-- Jest no backend (unit + e2e contra Postgres real) com `coverageThreshold` mínimo de 60%.
-- Vitest no frontend com cobertura.
+- Jest no backend (unit) cobrindo regras de domínio (auth, exams, appointments) e e2e contra Postgres + Redis reais validando os fluxos críticos ponta a ponta. `coverageThreshold` definido em `backend/package.json` (statements/lines 25%, branches/functions 20%) — os números refletem o foco em testar comportamento (regras de horário, conflito de slot, fluxos de auth) em vez de inflar cobertura em controllers triviais e DTOs.
+- Vitest no frontend com cobertura focada em `lib/` (api client, formatters, auth-storage).
 - Pipeline CI rodando lint, typecheck, unit tests e e2e em PRs.
 - Husky + `lint-staged` rodando lint apenas nos arquivos alterados antes do commit.
 - `commitlint` com `@commitlint/config-conventional` validando mensagens (`feat:`, `fix:`, `refactor:` etc.).

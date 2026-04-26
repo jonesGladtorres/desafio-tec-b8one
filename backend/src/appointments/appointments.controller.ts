@@ -20,7 +20,6 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import {
   AppointmentResponse,
@@ -28,6 +27,7 @@ import {
   PaginatedAppointmentsResponse,
 } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { ListAppointmentsQueryDto } from './dto/list-appointments-query.dto';
 
 @ApiTags('appointments')
 @ApiBearerAuth()
@@ -89,7 +89,7 @@ export class AppointmentsController {
   })
   findAll(
     @CurrentUser() user: AuthenticatedUser,
-    @Query() query: PaginationQueryDto,
+    @Query() query: ListAppointmentsQueryDto,
   ): Promise<PaginatedAppointmentsResponse> {
     return this.appointmentsService.findAllByUser(user.id, query);
   }

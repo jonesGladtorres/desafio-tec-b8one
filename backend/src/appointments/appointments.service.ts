@@ -5,13 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AppointmentStatus, Prisma } from '@prisma/client';
-import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { BusinessHoursConfig } from '../common/business-hours';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-
-const BUSINESS_START_HOUR_UTC = 8;
-const BUSINESS_END_HOUR_UTC = 17;
-const SLOT_INTERVAL_MINUTES = 30;
+import { ListAppointmentsQueryDto } from './dto/list-appointments-query.dto';
 
 export type AppointmentResponse = {
   id: string;
@@ -38,7 +35,10 @@ export type PaginatedAppointmentsResponse = {
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly businessHours: BusinessHoursConfig,
+  ) {}
 
   async create(
     userId: string,
@@ -125,14 +125,18 @@ export class AppointmentsService {
 
   async findAllByUser(
     userId: string,
-    query: PaginationQueryDto,
+    query: ListAppointmentsQueryDto,
   ): Promise<PaginatedAppointmentsResponse> {
-    const { page, limit } = query;
+    const { page, limit, status } = query;
+    const where: Prisma.AppointmentWhereInput = {
+      userId,
+      ...(status ? { status } : {}),
+    };
 
     const [total, appointments] = await this.prisma.$transaction([
-      this.prisma.appointment.count({ where: { userId } }),
+      this.prisma.appointment.count({ where }),
       this.prisma.appointment.findMany({
-        where: { userId },
+        where,
         include: { exam: true },
         orderBy: { scheduledAt: 'desc' },
         skip: (page - 1) * limit,
@@ -193,21 +197,9 @@ export class AppointmentsService {
   }
 
   private assertBusinessHours(date: Date): void {
-    const hour = date.getUTCHours();
-    const minute = date.getUTCMinutes();
-    const seconds = date.getUTCSeconds();
-    const ms = date.getUTCMilliseconds();
-
-    const isOnSlotBoundary =
-      seconds === 0 && ms === 0 && minute % SLOT_INTERVAL_MINUTES === 0;
-    const isWithinBusinessHours =
-      hour >= BUSINESS_START_HOUR_UTC &&
-      (hour < BUSINESS_END_HOUR_UTC ||
-        (hour === BUSINESS_END_HOUR_UTC && minute === 30));
-
-    if (!isOnSlotBoundary || !isWithinBusinessHours) {
+    if (!this.businessHours.isWithinBusinessHours(date)) {
       throw new BadRequestException(
-        `Slot must fall on a ${SLOT_INTERVAL_MINUTES}-minute boundary between ${BUSINESS_START_HOUR_UTC.toString().padStart(2, '0')}:00 and ${BUSINESS_END_HOUR_UTC.toString().padStart(2, '0')}:30 UTC.`,
+        `Slot must fall on a 30-minute boundary between ${this.businessHours.describe()}.`,
       );
     }
   }
