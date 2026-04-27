@@ -1,4 +1,6 @@
+import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../cache/redis/redis.service';
+import { BusinessHoursConfig } from '../common/business-hours';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { ExamsService, PaginatedExamsResponse } from './exams.service';
 
@@ -25,9 +27,11 @@ describe('ExamsService', () => {
       getJson: jest.fn(),
       setJson: jest.fn().mockResolvedValue(undefined),
     };
+    const businessHours = new BusinessHoursConfig(new ConfigService({}));
     service = new ExamsService(
       prisma as unknown as PrismaService,
       redis as unknown as RedisService,
+      businessHours,
     );
   });
 

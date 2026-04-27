@@ -3,10 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, CalendarCheck, Clock3, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell, EmptyState, GhostButton, PortalHeader } from '@/components/app-shell';
+import { useNotifications } from '@/components/ui/notification-provider';
 import { useDebounce } from '@/hooks/use-debounce';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { formatCurrency } from '@/lib/formatters';
 
 const PAGE_SIZE = 9;
@@ -20,6 +21,7 @@ export default function ExamsPage() {
 }
 
 function ExamsContent() {
+  const { notify } = useNotifications();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search.trim(), 300);
@@ -33,6 +35,18 @@ function ExamsContent() {
         search: debouncedSearch,
       }),
   });
+
+  useEffect(() => {
+    if (!examsQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Não foi possível carregar os exames',
+      description:
+        examsQuery.error instanceof ApiError
+          ? examsQuery.error.message
+          : 'Tente novamente em instantes.',
+    });
+  }, [examsQuery.isError, examsQuery.error, notify]);
 
   const exams = examsQuery.data?.data ?? [];
   const meta = examsQuery.data?.meta;

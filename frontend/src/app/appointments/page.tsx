@@ -9,7 +9,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AppShell,
   EmptyState,
@@ -19,7 +19,7 @@ import {
 } from '@/components/app-shell';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useNotifications } from '@/components/ui/notification-provider';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import type { Appointment } from '@/lib/types';
 
@@ -62,14 +62,29 @@ function AppointmentsContent() {
           : 'O agendamento foi cancelado com sucesso.',
       });
     },
-    onError: () => {
+    onError: (error) => {
       notify({
         type: 'error',
         title: 'Cancelamento não realizado',
-        description: 'Não foi possível cancelar este agendamento agora. Tente novamente.',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Não foi possível cancelar este agendamento agora. Tente novamente.',
       });
     },
   });
+
+  useEffect(() => {
+    if (!appointmentsQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Não foi possível carregar sua agenda',
+      description:
+        appointmentsQuery.error instanceof ApiError
+          ? appointmentsQuery.error.message
+          : 'Tente novamente em instantes.',
+    });
+  }, [appointmentsQuery.isError, appointmentsQuery.error, notify]);
 
   const appointments = appointmentsQuery.data?.data ?? [];
   const meta = appointmentsQuery.data?.meta;
@@ -204,12 +219,6 @@ function AppointmentsContent() {
             Próxima
           </GhostButton>
         </div>
-      ) : null}
-
-      {cancelMutation.error ? (
-        <p className="mt-4 rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
-          Não foi possível cancelar este agendamento.
-        </p>
       ) : null}
 
       <ConfirmDialog

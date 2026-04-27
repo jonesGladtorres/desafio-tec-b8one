@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AppointmentStatus, Prisma } from '@prisma/client';
 import { RedisService } from '../cache/redis/redis.service';
+import { BusinessHoursConfig } from '../common/business-hours';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { ListExamsQueryDto } from './dto/list-exams-query.dto';
 
@@ -41,6 +42,7 @@ export class ExamsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly businessHours: BusinessHoursConfig,
   ) {}
 
   async findAll(query: ListExamsQueryDto): Promise<PaginatedExamsResponse> {
@@ -162,7 +164,7 @@ export class ExamsService {
 
     return {
       date,
-      slots: this.buildBusinessSlots(requestedDate).map((startsAt) => ({
+      slots: this.businessHours.buildSlots(requestedDate).map((startsAt) => ({
         startsAt: startsAt.toISOString(),
         available:
           startsAt > new Date() && !occupied.has(startsAt.toISOString()),
@@ -173,19 +175,5 @@ export class ExamsService {
   private listCacheKey(page: number, limit: number, search?: string): string {
     const params = JSON.stringify({ page, limit, search: search ?? '' });
     return `v1:exams:list:${Buffer.from(params).toString('base64url')}`;
-  }
-
-  private buildBusinessSlots(date: Date): Date[] {
-    const slots: Date[] = [];
-
-    for (let hour = 8; hour <= 17; hour += 1) {
-      for (const minute of [0, 30]) {
-        const slot = new Date(date);
-        slot.setUTCHours(hour, minute, 0, 0);
-        slots.push(slot);
-      }
-    }
-
-    return slots;
   }
 }

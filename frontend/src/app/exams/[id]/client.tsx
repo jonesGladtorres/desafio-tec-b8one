@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AppShell,
   DetailRow,
@@ -48,8 +48,21 @@ export function ExamScheduleClient() {
 
 function ExamDetailsContent() {
   const params = useParams<{ id: string }>();
+  const { notify } = useNotifications();
   const examQuery = useExamQuery(params.id);
   const exam = examQuery.data;
+
+  useEffect(() => {
+    if (!examQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Não foi possível carregar o exame',
+      description:
+        examQuery.error instanceof ApiError
+          ? examQuery.error.message
+          : 'Tente novamente em instantes.',
+    });
+  }, [examQuery.isError, examQuery.error, notify]);
 
   return (
     <>
@@ -165,8 +178,21 @@ function ExamDetailsContent() {
 
 function ExamScheduleContent() {
   const params = useParams<{ id: string }>();
+  const { notify } = useNotifications();
   const examQuery = useExamQuery(params.id);
   const exam = examQuery.data;
+
+  useEffect(() => {
+    if (!examQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Não foi possível carregar o exame',
+      description:
+        examQuery.error instanceof ApiError
+          ? examQuery.error.message
+          : 'Tente novamente em instantes.',
+    });
+  }, [examQuery.isError, examQuery.error, notify]);
 
   return (
     <>
@@ -223,6 +249,18 @@ function SchedulePanel({ examId }: { examId: string }) {
     queryFn: () => api.getAvailableSlots(examId, date),
   });
 
+  useEffect(() => {
+    if (!slotsQuery.isError) return;
+    notify({
+      type: 'error',
+      title: 'Horários indisponíveis',
+      description:
+        slotsQuery.error instanceof ApiError
+          ? slotsQuery.error.message
+          : 'Não foi possível carregar os horários deste dia.',
+    });
+  }, [slotsQuery.isError, slotsQuery.error, notify]);
+
   const createMutation = useMutation({
     mutationFn: () =>
       api.createAppointment({
@@ -243,12 +281,15 @@ function SchedulePanel({ examId }: { examId: string }) {
       });
       router.push('/appointments');
     },
-    onError: () => {
+    onError: (error) => {
       setConfirmOpen(false);
       notify({
         type: 'error',
         title: 'Agendamento não realizado',
-        description: 'Não foi possível confirmar este horário agora. Tente novamente.',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Não foi possível confirmar este horário agora. Tente novamente.',
       });
     },
   });
@@ -259,12 +300,6 @@ function SchedulePanel({ examId }: { examId: string }) {
   );
   const selectedSlotTime = selectedSlot ? formatSlotTime(selectedSlot) : null;
   const selectedDateLabel = formatSelectedDate(date);
-  const errorMessage =
-    createMutation.error instanceof ApiError
-      ? createMutation.error.message
-      : createMutation.error
-        ? 'Não foi possível criar o agendamento.'
-        : null;
 
   function selectDate(value: string) {
     setDate(value);
@@ -440,12 +475,6 @@ function SchedulePanel({ examId }: { examId: string }) {
           placeholder="Preferências ou informações para a unidade"
         />
       </label>
-
-      {errorMessage ? (
-        <p className="mt-4 rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
-          {errorMessage}
-        </p>
-      ) : null}
 
       <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
         <SoftButton

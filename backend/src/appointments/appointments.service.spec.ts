@@ -1,5 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AppointmentStatus } from '@prisma/client';
+import { BusinessHoursConfig } from '../common/business-hours';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { AppointmentsService } from './appointments.service';
 
@@ -59,7 +61,11 @@ describe('AppointmentsService', () => {
         update: jest.fn(),
       },
     };
-    service = new AppointmentsService(prisma as unknown as PrismaService);
+    const businessHours = new BusinessHoursConfig(new ConfigService({}));
+    service = new AppointmentsService(
+      prisma as unknown as PrismaService,
+      businessHours,
+    );
   });
 
   it('creates an appointment when the exam exists and the slot is free', async () => {

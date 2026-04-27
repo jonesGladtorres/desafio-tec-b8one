@@ -49,10 +49,21 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async deleteByPattern(pattern: string): Promise<void> {
+    // SCAN evita bloquear o Redis em chaveiros grandes — diferente de KEYS, percorre em lotes.
     try {
-      const keys = await this.client.keys(pattern);
-      if (keys.length > 0) {
-        await this.client.del(keys);
+      const stream = this.client.scanStream({ match: pattern, count: 100 });
+      const pipeline = this.client.pipeline();
+      let queued = 0;
+
+      for await (const batch of stream) {
+        const keys = batch as string[];
+        if (keys.length === 0) continue;
+        pipeline.del(...keys);
+        queued += keys.length;
+      }
+
+      if (queued > 0) {
+        await pipeline.exec();
       }
     } catch (error) {
       this.logger.warn(

@@ -59,6 +59,33 @@ class EnvironmentVariables {
   @IsOptional()
   @IsUrl({ require_tld: false })
   CORS_ORIGIN?: string;
+
+  @IsOptional()
+  @Transform(({ value }: { value: string | undefined }) =>
+    value === undefined ? undefined : Number(value),
+  )
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  BUSINESS_START_HOUR?: number;
+
+  @IsOptional()
+  @Transform(({ value }: { value: string | undefined }) =>
+    value === undefined ? undefined : Number(value),
+  )
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  BUSINESS_END_HOUR?: number;
+
+  @IsOptional()
+  @Transform(({ value }: { value: string | undefined }) =>
+    value === undefined ? undefined : Number(value),
+  )
+  @IsInt()
+  @Min(-720)
+  @Max(840)
+  BUSINESS_TIMEZONE_OFFSET_MINUTES?: number;
 }
 
 export function validateEnv(

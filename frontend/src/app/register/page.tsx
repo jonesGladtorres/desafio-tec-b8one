@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
 import { SoftButton } from '@/components/app-shell';
-import { ErrorAlert, FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { FormField, FormInput, PasswordInput } from '@/components/ui/form-field';
+import { useNotifications } from '@/components/ui/notification-provider';
 import { useZodForm } from '@/hooks/use-zod-form';
 import { api, ApiError } from '@/lib/api';
 import { persistSession } from '@/lib/auth-storage';
@@ -14,6 +15,7 @@ import { registerSchema } from '@/lib/schemas';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { notify } = useNotifications();
   const form = useZodForm(registerSchema, {
     name: '',
     email: '',
@@ -30,7 +32,22 @@ export default function RegisterPage() {
       }),
     onSuccess: (session) => {
       persistSession(session);
+      notify({
+        type: 'success',
+        title: 'Conta criada',
+        description: `Bem-vindo(a), ${session.user.name.split(' ')[0]}! Já estamos te levando ao catálogo.`,
+      });
       router.replace('/exams');
+    },
+    onError: (error) => {
+      notify({
+        type: 'error',
+        title: 'Não foi possível criar a conta',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Confira os dados informados e tente novamente.',
+      });
     },
   });
 
@@ -40,13 +57,6 @@ export default function RegisterPage() {
     if (!data) return;
     registerMutation.mutate();
   }
-
-  const errorMessage =
-    registerMutation.error instanceof ApiError
-      ? registerMutation.error.message
-      : registerMutation.error
-        ? 'Não foi possível criar a conta. Tente novamente.'
-        : null;
 
   return (
     <main className="soft-grid grid min-h-screen place-items-center bg-[#f6f8f5] px-4 py-10">
@@ -164,8 +174,6 @@ export default function RegisterPage() {
                 error={!!form.errors.confirmPassword}
               />
             </FormField>
-
-            {errorMessage ? <ErrorAlert message={errorMessage} /> : null}
 
             <SoftButton
               type="submit"

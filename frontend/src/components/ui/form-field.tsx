@@ -92,10 +92,3 @@ export function FormTextarea({ error, ...props }: FormTextareaProps) {
   );
 }
 
-export function ErrorAlert({ message }: { message: string }) {
-  return (
-    <p role="alert" className="rounded-2xl bg-[#fff1ef] px-4 py-3 text-sm font-semibold text-[#9a4d45]">
-      {message}
-    </p>
-  );
-}
